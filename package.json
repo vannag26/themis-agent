@@ -1,8 +1,6 @@
 {
   "name": "themis-agent",
   "version": "1.0.0",
-  "description": "Themis \u2014 V&DG Chief Legal Officer",
-  "main": "src/themis.js",
   "scripts": {
     "start": "node src/themis.js"
   },
