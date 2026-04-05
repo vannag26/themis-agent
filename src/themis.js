@@ -184,6 +184,13 @@ process.once('SIGTERM', () => bot.stop('SIGTERM'));
 const PORT = process.env.PORT || 3000;
 http.createServer((req, res) => res.end('Themis is alive')).listen(PORT, () => {
   console.log('keepalive server on :' + PORT);
+  const host = process.env.RENDER_EXTERNAL_HOSTNAME || ('localhost:' + PORT);
+  const isLocal = host.startsWith('localhost');
+  const pinger = isLocal ? http : require('https');
+  setInterval(() => {
+    const url = (isLocal ? 'http://' : 'https://') + host + '/';
+    pinger.get(url, (r) => console.log('keep-alive: ' + r.statusCode)).on('error', (e) => console.log('keep-alive err: ' + e.message));
+  }, 840000);
 });
 
 bot.launch({ dropPendingUpdates: true }).then(() => {
