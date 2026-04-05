@@ -3,7 +3,6 @@ const axios = require('axios');
 const fs = require('fs-extra');
 const path = require('path');
 require('dotenv').config();
-const http      = require('http');
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 const ALLOWED_USER_ID = parseInt(process.env.ALLOWED_USER_ID);
@@ -15,7 +14,7 @@ const VDG_DATA_DIR = process.env.VDG_DATA_DIR || '/tmp/vdg-data';
 const CONVERSATION_FILE = path.join(VDG_DATA_DIR, 'themis_conversations.json');
 const MEMORY_FILE = path.join(VDG_DATA_DIR, 'memory.json');
 
-const THEMIS_SYSTEM_PROMPT = `You are Themis â V&DG Management LLC's Chief Legal Officer. Your role: IP protection, trademark filings, HIPAA compliance for TriageRobot Corp, contract drafting and review, regulatory compliance, and legal risk assessment. You serve Vanna Gonzalez (Chairman). V&DG portfolio: RateWire FX API, Vibe Travel Stack, Soul Resonances, The Asset Frequency, Ki Healthcare Consulting, TriageRobot Corp. Priority legal items: Founder IP Assignment, Vibe Travel Stackâ  trademark, SOC 2 Type I for hospital sales. Always cite relevant law/regulation when applicable. Be precise, actionable, never hedge unnecessarily.`;
+const THEMIS_SYSTEM_PROMPT = `You are Themis — V&DG Management LLC's Chief Legal Officer. Your role: IP protection, trademark filings, HIPAA compliance for TriageRobot Corp, contract drafting and review, regulatory compliance, and legal risk assessment. You serve Vanna Gonzalez (Chairman). V&DG portfolio: RateWire FX API, Vibe Travel Stack, Soul Resonances, The Asset Frequency, Ki Healthcare Consulting, TriageRobot Corp. Priority legal items: Founder IP Assignment, Vibe Travel Stack℠ trademark, SOC 2 Type I for hospital sales. Always cite relevant law/regulation when applicable. Be precise, actionable, never hedge unnecessarily.`;
 
 // Ensure VDG_DATA_DIR exists
 fs.ensureDirSync(VDG_DATA_DIR);
@@ -91,7 +90,7 @@ async function callClaude(messages, systemPrompt) {
 
 // /start command
 bot.command('start', async (ctx) => {
-  const greeting = `Welcome to Themis â V&DG Management LLC's Chief Legal Officer.
+  const greeting = `Welcome to Themis — V&DG Management LLC's Chief Legal Officer.
 
 I handle:
 - IP protection & trademark filings
@@ -100,7 +99,7 @@ I handle:
 - Regulatory compliance
 - Legal risk assessment
 
-Portfolio: RateWire FX API, Vibe Travel Stackâ , Soul Resonances, The Asset Frequency, Ki Healthcare Consulting, TriageRobot Corp
+Portfolio: RateWire FX API, Vibe Travel Stack℠, Soul Resonances, The Asset Frequency, Ki Healthcare Consulting, TriageRobot Corp
 
 Ready to assist with legal matters.`;
   await ctx.reply(greeting);
@@ -178,37 +177,9 @@ process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
 
 // Launch bot
-
-// ── Launch ────────────────────────────────────────────────────────────────────
-// Keepalive HTTP server required by Render Web Service (port binding)
-const PORT = process.env.PORT || 3000;
-http.createServer((req, res) => res.end('Themis is alive')).listen(PORT, () => {
-  console.log('keepalive server on :' + PORT);
-  const host = process.env.RENDER_EXTERNAL_HOSTNAME || ('localhost:' + PORT);
-  const isLocal = host.startsWith('localhost');
-  const pinger = isLocal ? http : require('https');
-  setInterval(() => {
-    const url = (isLocal ? 'http://' : 'https://') + host + '/';
-    pinger.get(url, (r) => console.log('keep-alive: ' + r.statusCode)).on('error', (e) => console.log('keep-alive err: ' + e.message));
-  }, 840000);
+bot.launch().then(() => {
+  console.log('Themis bot is running...');
+}).catch(error => {
+  console.error('Failed to launch Themis bot:', error);
+  process.exit(1);
 });
-
-async function launchBot(attempt = 1) {
-  if (attempt > 1) {
-    const wait = attempt * 8000;
-    console.log('Retry attempt ' + attempt + ', waiting ' + (wait/1000) + 's...');
-    await new Promise(r => setTimeout(r, wait));
-  }
-  try {
-    await bot.launch({ dropPendingUpdates: true });
-    console.log('Themis bot is running...');
-  } catch (error) {
-    if (error.message && error.message.includes('409') && attempt < 6) {
-      console.log('409 conflict, retrying...');
-      return launchBot(attempt + 1);
-    }
-    console.error('Failed to launch Themis bot:', error.message);
-    // No process.exit — keepalive server stays up
-  }
-}
-launchBot();
