@@ -1,0 +1,16 @@
+{
+  "name": "themis-agent",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node src/themis.js"
+  },
+  "dependencies": {
+    "telegraf": "^4.16.3",
+    "axios": "^1.6.0",
+    "fs-extra": "^11.2.0",
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
